@@ -1,4 +1,3 @@
----
 name: build-ublue-custom
 on:
   pull_request:
@@ -14,9 +13,9 @@ on:
   workflow_dispatch:
 
 env:
-  MY_IMAGE_NAME: "${{ github.event.repository.name }}"  # the name of the image produced by this build, matches repo names
+  MY_IMAGE_NAME: "${{ github.event.repository.name }}"
   MY_IMAGE_DESC: "My Customized Universal Blue Image"
-  IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"  # do not edit
+  IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
 
 jobs:
   build_push:
@@ -29,7 +28,6 @@ jobs:
       id-token: write
 
     steps:
-      # Checkout push-to-registry action GitHub repository
       - name: Checkout Push to Registry action
         uses: actions/checkout@v4
 
@@ -40,17 +38,14 @@ jobs:
         id: generate-tags
         shell: bash
         run: |
-          # Generate a timestamp for creating an image version history
           TIMESTAMP="$(date +%Y%m%d)"
           COMMIT_TAGS=()
           BUILD_TAGS=()
 
-          # Have tags for tracking builds during pull request
           SHA_SHORT="${GITHUB_SHA::7}"
           COMMIT_TAGS+=("pr-${{ github.event.number }}")
           COMMIT_TAGS+=("${SHA_SHORT}")
 
-          # Append matching timestamp tags to keep a version history
           for TAG in "${BUILD_TAGS[@]}"; do
               BUILD_TAGS+=("${TAG}-${TIMESTAMP}")
           done
@@ -96,16 +91,14 @@ jobs:
         with:
           containerfiles: |
             ./Containerfile
-          # Postfix image name with -custom to make it a little more descriptive
-          # Syntax: https://docs.github.com/en/actions/learn-github-actions/expressions#format
           image: ${{ env.MY_IMAGE_NAME }}
           tags: |
             ${{ steps.generate-tags.outputs.alias_tags }}
           labels: ${{ steps.meta.outputs.labels }}
           oci: false
+          build-args: |
+            AKMODS_VERSION=main-${{ github.event.repository.name }}  # Dynamische AKMODS_VERSION setzen
 
-      # Workaround bug where capital letters in your GitHub username make it impossible to push to GHCR.
-      # https://github.com/macbre/push-to-ghcr/issues/12
       - name: Lowercase Registry
         id: registry_case
         uses: ASzc/change-string-case-action@v6
@@ -124,7 +117,7 @@ jobs:
         id: push
         env:
           REGISTRY_USER: ${{ github.actor }}
-          REGISTRY_PASSWORD: ${{ github.token }}
+          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         with:
           image: ${{ steps.build_image.outputs.image }}
           tags: ${{ steps.build_image.outputs.tags }}
@@ -134,12 +127,6 @@ jobs:
           extra-args: |
             --disable-content-trust
 
-      # This section is optional and only needs to be enabled if you plan on distributing
-      # your project for others to consume. You will need to create a public and private key
-      # using Cosign and save the private key as a repository secret in Github for this workflow
-      # to consume. For more details, review the image signing section of the README.
-
-      # Sign container
       - uses: sigstore/cosign-installer@v3.7.0
         if: github.event_name != 'pull_request'
 

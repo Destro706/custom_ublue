@@ -55,11 +55,8 @@ FROM ghcr.io/ublue-os/${SOURCE_IMAGE}${SOURCE_SUFFIX}:${SOURCE_TAG}
 
 COPY --from=base /fedora_version /tmp/fedora_version
 
-RUN FEDORA_VERSION=$(cat /tmp/fedora_version) && \
-    echo "Detected Fedora version: $FEDORA_VERSION" && \
-    BASE_VERSION=$(echo $FEDORA_VERSION | sed 's/VERSION_ID=//') && \
-    AKMODS_VERSION="main-$BASE_VERSION" && \
-    echo "Using AKMODS version: $AKMODS_VERSION" && \
+ARG AKMODS_VERSION
+RUN echo "Using AKMODS version: $AKMODS_VERSION" && \
     echo $AKMODS_VERSION > /tmp/akmods_version
 
 RUN AKMODS_VERSION=$(cat /tmp/akmods_version) && \
@@ -67,7 +64,6 @@ RUN AKMODS_VERSION=$(cat /tmp/akmods_version) && \
 
 COPY --from=ghcr.io/ublue-os/akmods-extra:${AKMODS_VERSION} /rpms/ /tmp/rpms/
 
-# Weitere Schritte, z.B. Installation der RPM-Pakete
 RUN rpm-ostree install /tmp/rpms/*.rpm
 
 COPY build.sh /tmp/build.sh
