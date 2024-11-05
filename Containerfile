@@ -56,12 +56,10 @@ FROM ghcr.io/ublue-os/${SOURCE_IMAGE}${SOURCE_SUFFIX}:${SOURCE_TAG}
 COPY --from=base /fedora_version /tmp/fedora_version
 
 ARG FEDORA_VERSION
+RUN export FEDORA_VERSION=$(cat /tmp/fedora_version) && echo "Detected Fedora version: $FEDORA_VERSION"
 
-RUN export FEDORA_VERSION=$(cat /tmp/fedora_version) && \
-    echo "Detected Fedora version: $FEDORA_VERSION" && \
-    echo $FEDORA_VERSION > /fedora_version_arg
-
-ARG AKMODS_VERSION=main-$(cat /fedora_version_arg)
+RUN echo "main-$(cat /tmp/fedora_version)" > /tmp/akmods_version
+ARG AKMODS_VERSION=$(cat /tmp/akmods_version)
 
 COPY --from=ghcr.io/ublue-os/akmods-extra:${AKMODS_VERSION} /rpms/ /tmp/rpms
 
