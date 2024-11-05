@@ -57,19 +57,18 @@ COPY --from=base /fedora_version /tmp/fedora_version
 
 RUN FEDORA_VERSION=$(cat /tmp/fedora_version) && \
     echo "Detected Fedora version: $FEDORA_VERSION" && \
-    AKMODS_VERSION="main-$FEDORA_VERSION" && \
+    BASE_VERSION=$(echo $FEDORA_VERSION | sed 's/VERSION_ID=//') && \
+    AKMODS_VERSION="main-$BASE_VERSION" && \
     echo "Using AKMODS version: $AKMODS_VERSION" && \
     echo $AKMODS_VERSION > /tmp/akmods_version
 
 RUN AKMODS_VERSION=$(cat /tmp/akmods_version) && \
     echo "Final AKMODS version: $AKMODS_VERSION"
 
-RUN BASE_VERSION=$(echo $AKMODS_VERSION | sed 's/main-//') && \
-    echo "Base version: $BASE_VERSION"
-
-COPY --from=ghcr.io/ublue-os/akmods-extra:main-${BASE_VERSION} /rpms/ /tmp/rpms
+COPY --from=ghcr.io/ublue-os/akmods-extra:${AKMODS_VERSION} /rpms/ /tmp/rpms
 
 RUN rpm-ostree install /tmp/rpms/kmods/kmod-evdi*.rpm
+
 COPY build.sh /tmp/build.sh
 
 RUN mkdir -p /var/lib/alternatives && \
