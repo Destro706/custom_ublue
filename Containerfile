@@ -56,9 +56,14 @@ FROM ghcr.io/ublue-os/${SOURCE_IMAGE}${SOURCE_SUFFIX}:${SOURCE_TAG}
 COPY --from=base /fedora_version /tmp/fedora_version
 
 ARG FEDORA_VERSION
-RUN export FEDORA_VERSION=$(cat /tmp/fedora_version) && echo "Detected Fedora version: $FEDORA_VERSION"
 
-COPY --from=ghcr.io/ublue-os/akmods-extra:main-$(cat /tmp/fedora_version) /rpms/ /tmp/rpms
+RUN export FEDORA_VERSION=$(cat /tmp/fedora_version) && \
+    echo "Detected Fedora version: $FEDORA_VERSION" && \
+    echo $FEDORA_VERSION > /fedora_version_arg
+
+ARG AKMODS_VERSION=main-$(cat /fedora_version_arg)
+
+COPY --from=ghcr.io/ublue-os/akmods-extra:${AKMODS_VERSION} /rpms/ /tmp/rpms
 
 RUN rpm-ostree install /tmp/rpms/kmods/kmod-evdi*.rpm
 
