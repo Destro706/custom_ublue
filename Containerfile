@@ -42,7 +42,7 @@ ARG SOURCE_TAG="latest"
 FROM ghcr.io/ublue-os/${SOURCE_IMAGE}${SOURCE_SUFFIX}:${SOURCE_TAG} as base
 
 # read Version from Base-Image
-RUN grep -oP 'VERSION_ID="\K[0-9]+' /etc/os-release > /fedora_version
+RUN grep 'VERSION_ID=' /etc/os-release | cut -d '"' -f 2 > /fedora_version
 
 ### 2. SOURCE IMAGE
 ## this is a standard Containerfile FROM using the build ARGs above to select the right upstream image
