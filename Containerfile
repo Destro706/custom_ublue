@@ -38,11 +38,6 @@ ARG SOURCE_SUFFIX="-dx"
 ## SOURCE_TAG arg must be a version built for the specific image: eg, 39, 40, gts, latest
 ARG SOURCE_TAG="latest"
 
-# 1. extract Fedora Version
-FROM ghcr.io/ublue-os/${SOURCE_IMAGE}${SOURCE_SUFFIX}:${SOURCE_TAG} as base
-
-# read Version from Base-Image
-RUN grep 'VERSION_ID=' /etc/os-release | cut -d '"' -f 2 > /fedora_version
 
 ### 2. SOURCE IMAGE
 ## this is a standard Containerfile FROM using the build ARGs above to select the right upstream image
@@ -53,18 +48,10 @@ FROM ghcr.io/ublue-os/${SOURCE_IMAGE}${SOURCE_SUFFIX}:${SOURCE_TAG}
 ## make modifications desired in your image and install packages by modifying the build.sh script
 ## the following RUN directive does all the things required to run "build.sh" as recommended.
 
-COPY --from=base /fedora_version /tmp/fedora_version
-
-ARG AKMODS_VERSION
-RUN echo "Using AKMODS version: $AKMODS_VERSION" && \
-    echo $AKMODS_VERSION > /tmp/akmods_version
-
-RUN AKMODS_VERSION=$(cat /tmp/akmods_version) && \
-    echo "Final AKMODS version: $AKMODS_VERSION"
-
-COPY --from=ghcr.io/ublue-os/akmods-extra:${AKMODS_VERSION} /rpms/ /tmp/rpms/
-
-RUN rpm-ostree install /tmp/rpms/*.rpm
+# add displaylink driver
+RUN curl -o /etc/yum.repos.d/fedora-multimedia.repo https://negativo17.org/repos/fedora-multimedia.repo
+COPY --from=ghcr.io/ublue-os/akmods-extra:main-41 /rpms/ /tmp/rpms
+RUN rpm-ostree install /tmp/rpms/kmods/kmod-evdi*.rpm
 
 COPY build.sh /tmp/build.sh
 
