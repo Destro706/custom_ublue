@@ -59,13 +59,12 @@ RUN FEDORA_VERSION=$(cat /tmp/fedora_version) && \
     echo "Detected Fedora version: $FEDORA_VERSION" && \
     AKMODS_VERSION="main-$FEDORA_VERSION" && \
     echo "Using AKMODS version: $AKMODS_VERSION" && \
-    # Mit der Verwendung einer temporären Datei, die in der nächsten Zeile ausgeführt wird
     echo $AKMODS_VERSION > /tmp/akmods_version
 
-ARG AKMODS_VERSION_PREFIX="main-"
-ARG AKMODS_VERSION=$(cat /tmp/akmods_version)
+RUN AKMODS_VERSION=$(cat /tmp/akmods_version) && \
+    echo "Final AKMODS version: $AKMODS_VERSION"
 
-COPY --from=ghcr.io/ublue-os/akmods-extra:${AKMODS_VERSION_PREFIX}$(cat /tmp/akmods_version) /rpms/ /tmp/rpms
+COPY --from=ghcr.io/ublue-os/akmods-extra:${AKMODS_VERSION} /rpms/ /tmp/rpms
 
 RUN rpm-ostree install /tmp/rpms/kmods/kmod-evdi*.rpm
 
