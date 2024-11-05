@@ -62,6 +62,7 @@ RUN FEDORA_VERSION=$(cat /tmp/fedora_version) && \
     echo "Using AKMODS version: $AKMODS_VERSION" && \
     echo $AKMODS_VERSION > /tmp/akmods_version
 
+ARG AKMODS_VERSION
 RUN AKMODS_VERSION=$(cat /tmp/akmods_version) && \
     echo "Final AKMODS version: $AKMODS_VERSION"
 
