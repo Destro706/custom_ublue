@@ -63,13 +63,12 @@ RUN FEDORA_VERSION=$(cat /tmp/fedora_version) && \
     echo $AKMODS_VERSION > /tmp/akmods_version
 
 RUN AKMODS_VERSION=$(cat /tmp/akmods_version) && \
-    echo "Final AKMODS version: $AKMODS_VERSION" && \
-    cp -r /rpms/ /tmp/rpms && \
-    echo "Copying RPMs from akmods-extra:${AKMODS_VERSION}" && \
-    cp -r /tmp/rpms/ /tmp/akmods_extra/ && \
-    cp -r /tmp/akmods_extra/* /tmp/rpms/
+    echo "Final AKMODS version: $AKMODS_VERSION"
 
-RUN rpm-ostree install /tmp/rpms/kmods/kmod-evdi*.rpm
+COPY --from=ghcr.io/ublue-os/akmods-extra:${AKMODS_VERSION} /rpms/ /tmp/rpms/
+
+# Weitere Schritte, z.B. Installation der RPM-Pakete
+RUN rpm-ostree install /tmp/rpms/*.rpm
 
 COPY build.sh /tmp/build.sh
 
